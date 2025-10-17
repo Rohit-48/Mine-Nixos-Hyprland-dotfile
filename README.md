@@ -39,13 +39,6 @@ Custom NixOS configuration with Hyprland window manager, optimized for developme
 
 ## Configuration Structure
 
-```
-nixos/
-├── configuration.nix
-├── flake.nix
-├── flake.lock
-└── hardware-configuration.nix
-```
 
 ## Theming
 
