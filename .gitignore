@@ -1,0 +1,89 @@
+# NixOS specific
+result
+result-*
+.direnv
+.direnv/
+
+# Nix store paths
+/nix/store/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Logs
+*.log
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Personal configuration files (if any)
+# Uncomment if you have personal configs you don't want to track
+# .env
+# .env.local
+# .env.*.local
+
+# Build artifacts
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Package manager files
+node_modules/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Rust
+target/
+Cargo.lock
+
+# Go
+vendor/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Compiled binaries
+*.exe
+*.out
+*.app
