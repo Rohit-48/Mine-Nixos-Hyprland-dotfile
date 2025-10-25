@@ -37,9 +37,6 @@ Custom NixOS configuration with Hyprland window manager, optimized for developme
 - Productivity: Obsidian, LibreOffice
 - File Manager: Thunar
 
-## Configuration Structure
-
-
 ## Theming
 
 - Theme: Catppuccin Mocha (pink accents)
