@@ -1,20 +1,39 @@
 # /etc/nixos/configuration.nix
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   imports = [
     ./hardware-configuration.nix
   ];
 
-  # Allow proprietary software
+  ########################################
+  # Nix Configuration
+  ########################################
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.allowUnsupportedSystem = true;
+  
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    
+    # Hyprland Cachix - IMPORTANT: Add this BEFORE using Hyprland flake
+    substituters = [ "https://hyprland.cachix.org" ];
+    trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
+    
+    # Optimization
+    auto-optimise-store = true;
+  };
+  
+  # Garbage collection
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
+  };
 
   ########################################
   # Boot & Kernel
   ########################################
-  boot.kernelPackages = pkgs.linuxPackages_6_6;
-
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  
   boot.loader = {
     systemd-boot.enable = true;
     efi.canTouchEfiVariables = true;
@@ -46,36 +65,44 @@
   };
 
   ########################################
-  # Display (Hyprland Only - No KDE)
+  # Hyprland Configuration
   ########################################
-  
-  # Enable Hyprland
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
+    # Use Hyprland from flake
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    # Sync portal package
+    portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
-  # Display Manager - SDDM configured for Hyprland
+  ########################################
+  # Display Manager
+  ########################################
+  services.displayManager.sddm = {
+    enable = true;
+    wayland.enable = true;
+    package = pkgs.kdePackages.sddm;
+  };
 
-services.displayManager.sddm = {
-  enable = true;
-  wayland.enable = true;
-  
-  # settings goes INSIDE the sddm block, and it's a set (use = not ;)
-  settings = {
-    General = {
-      Numlock = "on";
+  ########################################
+  # XDG Portals
+  ########################################
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ 
+      inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
+      pkgs.xdg-desktop-portal-gtk
+    ];
+    config = {
+      common.default = [ "hyprland" "gtk" ];
+      hyprland.default = [ "hyprland" "gtk" ];
     };
   };
-};
-
-  # Enable flakes
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   ########################################
-  # Sound & Bluetooth
+  # Sound (PipeWire)
   ########################################
-  # Disable PulseAudio (using PipeWire instead)
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   
@@ -85,11 +112,24 @@ services.displayManager.sddm = {
     alsa.support32Bit = true;
     pulse.enable = true;
     jack.enable = true;
-    wireplumber.enable = true;
   };
 
-  hardware.bluetooth.enable = true;
+  ########################################
+  # Bluetooth
+  ########################################
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
   services.blueman.enable = true;
+
+  ########################################
+  # Graphics
+  ########################################
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
 
   ########################################
   # Users
@@ -107,62 +147,61 @@ services.displayManager.sddm = {
     shell = pkgs.zsh;
   };
 
-  users.defaultUserShell = pkgs.zsh;
-
-  # Enable zsh
+  ########################################
+  # Shell Configuration
+  ########################################
   programs.zsh = {
     enable = true;
     enableCompletion = true;
     syntaxHighlighting.enable = true;
-    histSize = 1000;
-
-    promptInit = ''
-      source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-    '';
+    autosuggestions.enable = true;
   };
+  
+  programs.starship.enable = true;
 
   ########################################
   # System Packages
   ########################################
   environment.systemPackages = with pkgs; [
-    # Core tools
+    # Essential tools
     git
     vim
     neovim
     wget
+    curl
     tree
     htop
     btop
     fastfetch
+    neofetch
     tmux
-
+    unzip
+    zip
+    
     # Development
     gcc
     nodejs_22
     python3
+    python3Packages.pip
     direnv
     nix-direnv
     bun
     rustup
     go
     
-    # Terminals & Editors
+    # Terminals
     kitty
     ghostty
-    nitch
-    code-cursor
+    
+    # Editors & IDEs
     zed-editor
     vscode
-    spotify
-    notion-app 
-
-    # Browsers & Communication
+    
+    # Apps
     google-chrome
     discord
-    
-    # Clipboard (Essential for Hyprland)
-    wl-clipboard
-    cliphist
+    spotify
+    obsidian
     
     # Hyprland essentials
     waybar
@@ -175,66 +214,57 @@ services.displayManager.sddm = {
     grim
     slurp
     swappy
+    wl-clipboard
+    cliphist
     networkmanagerapplet
     pavucontrol
     brightnessctl
     playerctl
     polkit_gnome
-    swayidle
-
-    # Catppuccin theme (recommended - matches your setup)
-    (pkgs.catppuccin-sddm.override {
-      flavor = "mocha";
-      font = "JetBrains Mono";
-      fontSize = "12";
-      background = "/home/giyu/Pictures/minewallpapers/starbase4.jpeg";
-      loginBackground = true;
-      })
     
     # File manager
     xfce.thunar
     xfce.thunar-volman
     xfce.thunar-archive-plugin
-
-    # Theming & Icons
+    xfce.tumbler  # Thumbnail support
+    
+    # Theming
     papirus-icon-theme
     catppuccin-gtk
     catppuccin-cursors.mochaPink
     nwg-look
-    starship
     
-    # Formatters / Linters
+    # Development tools
     prettierd
     eslint_d
     stylua
     black
+    nixfmt-rfc-style
     
-    # Language servers
+    # LSP
     lua-language-server
     pyright
-    typescript
-    bash-language-server
-    dockerfile-language-server
-    yaml-language-server
-    marksman
-
-    # Telescope / fzf support
+    nodePackages.typescript-language-server
+    nodePackages.bash-language-server
+    
+    # CLI tools
     fzf
     bat
     fd
     ripgrep
-
+    eza
+    
     # Docker
     docker
     docker-compose
     
     # Media
     vlc
-    obsidian
     libreoffice
     
-    # System Information
+    # System utilities
     pciutils
+    usbutils
     gnome-keyring
     libsecret
   ];
@@ -243,65 +273,43 @@ services.displayManager.sddm = {
   # Fonts
   ########################################
   fonts.packages = with pkgs; [
-    # Nerd Fonts - New individual package syntax
     nerd-fonts.jetbrains-mono
     nerd-fonts.fira-code
     nerd-fonts.hack
     nerd-fonts.symbols-only
     
-    # Regular fonts
     noto-fonts
     noto-fonts-emoji
     noto-fonts-cjk-sans
     
-    # Icon fonts
     font-awesome
     material-design-icons
-
-    corefonts  # <— this one includes Courier New, Arial, Times New Roman, etc.
-          jetbrains-mono
+    
+    jetbrains-mono
+    fira-code
   ];
 
   ########################################
-  # Docker
+  # Programs
   ########################################
-  virtualisation.docker.enable = true;
-
-  ########################################
-  # Flatpak
-  ########################################
-  services.flatpak.enable = true;
-
-  ########################################
-  # Graphics (Intel integrated)
-  ########################################
-  hardware.graphics = {
+  programs.thunar = {
     enable = true;
-    enable32Bit = true;
+    plugins = with pkgs.xfce; [
+      thunar-archive-plugin
+      thunar-volman
+    ];
   };
-
-  ########################################
-  # Power Management
-  ########################################
-  services.power-profiles-daemon.enable = false;
   
-  services.tlp = {
-    enable = true;
-    settings = {
-      CPU_SCALING_GOVERNOR_ON_AC = "performance";
-      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
-      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
-      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
-      START_CHARGE_THRESH_BAT0 = 40;
-      STOP_CHARGE_THRESH_BAT0 = 80;
-    };
-  };
+  programs.dconf.enable = true;
 
   ########################################
   # Services
   ########################################
   services.openssh.enable = true;
   services.dbus.enable = true;
+  services.gvfs.enable = true;
+  services.tumbler.enable = true;
+  
   security.polkit.enable = true;
   services.gnome.gnome-keyring.enable = true;
   
@@ -319,49 +327,57 @@ services.displayManager.sddm = {
       TimeoutStopSec = 10;
     };
   };
-  
-  # XDG Portals - Simplified configuration
-  xdg.portal = {
-    enable = true;
-    extraPortals = [ 
-      pkgs.xdg-desktop-portal-hyprland
-      pkgs.xdg-desktop-portal-gtk 
-    ];
-    config.common.default = [ "hyprland" "gtk" ];
-  };
-
-  programs.dconf.enable = true;
-  
-  # Enable XDG autostart
-  xdg.autostart.enable = true;
-
-  # Thunar integration
-  programs.thunar = {
-    enable = true;
-    plugins = with pkgs.xfce; [
-      thunar-archive-plugin
-      thunar-volman
-    ];
-  };
-
-  services.gvfs.enable = true;
-  services.tumbler.enable = true;
 
   ########################################
-  # Environment Variables (Wayland)
+  # Docker
+  ########################################
+  virtualisation.docker.enable = true;
+
+  ########################################
+  # Power Management (Laptop)
+  ########################################
+  services.power-profiles-daemon.enable = false;
+  
+  services.tlp = {
+    enable = true;
+    settings = {
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+      START_CHARGE_THRESH_BAT0 = 40;
+      STOP_CHARGE_THRESH_BAT0 = 80;
+    };
+  };
+
+  ########################################
+  # Environment Variables
   ########################################
   environment.sessionVariables = {
+    # Wayland
     NIXOS_OZONE_WL = "1";
     XDG_SESSION_TYPE = "wayland";
     QT_QPA_PLATFORM = "wayland;xcb";
     GDK_BACKEND = "wayland,x11";
     MOZ_ENABLE_WAYLAND = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
+    
+    # Hyprland
     WLR_NO_HARDWARE_CURSORS = "1";
     XCURSOR_SIZE = "24";
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_DESKTOP = "Hyprland";
+    
+    # Editor
+    EDITOR = "nvim";
+    VISUAL = "nvim";
   };
+
+  ########################################
+  # Flatpak (Optional)
+  ########################################
+  services.flatpak.enable = true;
+  xdg.portal.xdgOpenUsePortal = true;
 
   ########################################
   # System State Version

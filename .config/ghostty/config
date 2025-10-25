@@ -42,26 +42,13 @@
 # # Just for example:
 # resize-overlay-duration = 4s 200ms
 
-
-background = 282c34
-foreground = ffffff
-
-keybind = ctrl+z=close_surface
-keybind = ctrl+d=new_split:right
-
-theme = Catppuccin Frappe
-
-shell-integration = zsh 
-
-# Ghostty Configuration
-# Save to: ~/.config/ghostty/config
+# ~/.config/ghostty/config
 
 # Font Configuration
-font-family = JetBrainsMono Nerd Font
+font-family = "JetBrainsMono Nerd Font"
 font-size = 12
-font-feature = -calt  # Disable ligatures, remove if you want them
 
-# Window Configuration
+# Window Settings
 window-padding-x = 10
 window-padding-y = 10
 window-decoration = true
@@ -103,9 +90,6 @@ palette = 13=#c0b1cf
 palette = 14=#9dd0bd
 palette = 15=#e3d2c4
 
-# Tab bar
-window-decoration = true
-
 # Performance
 resize-overlay = never
 
@@ -129,5 +113,6 @@ mouse-hide-while-typing = true
 clipboard-read = allow
 clipboard-write = allow
 
-# URLs
+# Updates
 auto-update = check
+theme = catppuccin-frappe

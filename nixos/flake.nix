@@ -1,32 +1,20 @@
 {
-  description = "NixOS system flake (no Home Manager) — Hyprland only";
-  
+  description = "NixOS system flake with Hyprland";
+
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-
-    # Hyprland window manager
-    hyprland = {
-      url = "github:hyprwm/Hyprland";
-      # Ensure hyprland uses the same nixpkgs
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    
+    hyprland.url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
   };
 
-  
-  outputs = { self, nixpkgs, hyprland, ... }:
-    let
+  outputs = { self, nixpkgs, hyprland, ... }@inputs: {
+    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      hostname = "nixos";
-    in {
-      nixosConfigurations = {
-        "${hostname}" = nixpkgs.lib.nixosSystem {
-          inherit system;
-          modules = [
-            ./configuration.nix
-            ./hardware-configuration.nix
-          ];
-        };
-      };
+      specialArgs = { inherit inputs; };
+      modules = [
+        ./configuration.nix
+        ./hardware-configuration.nix
+      ];
     };
+  };
 }
