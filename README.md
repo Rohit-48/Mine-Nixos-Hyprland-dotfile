@@ -4,6 +4,8 @@
   <img src="Nixos-logo.png" alt="NixOS Logo" width="200"/>
 </div>
 
+## NixOS 25.11 (Xantusia)
+
 ## Overview
 
 Custom NixOS configuration with Hyprland window manager, optimized for development productivity.
@@ -76,6 +78,21 @@ Custom NixOS configuration with Hyprland window manager, optimized for developme
 - Development-focused with comprehensive tooling
 - Catppuccin color scheme
 - Wayland-first approach
+
+## Credits
+
+### Configuration Sources
+- **Hyprland Configuration**: Adapted from [snxhasish's dotfiles](https://github.com/snxhasish/nixos-dotfiles)
+  - `hyprland.conf` - Window manager configuration and keybindings
+  
+- **Waybar**: Based on [snxhasish's setup](https://github.com/snxhasish/nixos-dotfiles)
+  - `config.jsonc` - Status bar modules and layout
+  - `style.css` - Catppuccin Mocha theme styling
+  
+- **Kitty Terminal**: Initial config from [snxhasish](https://github.com/snxhasish/nixos-dotfiles)
+  - Basic transparency and blur settings
+
+All configurations have been customized for personal use.
 
 ---
 
