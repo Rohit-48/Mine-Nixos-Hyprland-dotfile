@@ -1,111 +1,67 @@
-# /etc/nixos/configuration.nix
 { config, pkgs, lib, inputs, ... }:
 
 {
-  imports = [
-    ./hardware-configuration.nix
-  ];
+  imports = [ ./hardware-configuration.nix ];
 
-  ########################################
-  # Nix Configuration
-  ########################################
+  # Nix Settings
   nixpkgs.config.allowUnfree = true;
-  
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
-    
-    # Hyprland Cachix - IMPORTANT: Add this BEFORE using Hyprland flake
     substituters = [ "https://hyprland.cachix.org" ];
     trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
-    
-    # Optimization
     auto-optimise-store = true;
   };
-  
-  # Garbage collection
+
+  # Grabage Collector
   nix.gc = {
     automatic = true;
     dates = "weekly";
-    options = "--delete-older-than 7d";
+    options = "--delete-older-than 5d";
   };
 
-  ########################################
-  # Boot & Kernel
-  ########################################
+  # Boot
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  
   boot.loader = {
     systemd-boot.enable = true;
     efi.canTouchEfiVariables = true;
   };
 
-  ########################################
-  # Network & Locale
-  ########################################
+  # Network & Time
   networking = {
     hostName = "nixos";
     networkmanager.enable = true;
   };
-
   time.timeZone = "Asia/Kolkata";
-  
-  i18n = {
-    defaultLocale = "en_IN";
-    extraLocaleSettings = {
-      LC_ADDRESS = "en_IN";
-      LC_IDENTIFICATION = "en_IN";
-      LC_MEASUREMENT = "en_IN";
-      LC_MONETARY = "en_IN";
-      LC_NAME = "en_IN";
-      LC_NUMERIC = "en_IN";
-      LC_PAPER = "en_IN";
-      LC_TELEPHONE = "en_IN";
-      LC_TIME = "en_IN";
-    };
-  };
+  i18n.defaultLocale = "en_IN";
 
-  ########################################
-  # Hyprland Configuration
-  ########################################
+  # Hyprland
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    # Use Hyprland from flake
     package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-    # Sync portal package
     portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
-  ########################################
   # Display Manager
-  ########################################
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = true;
     package = pkgs.kdePackages.sddm;
   };
 
-  ########################################
   # XDG Portals
-  ########################################
   xdg.portal = {
     enable = true;
     extraPortals = [ 
       inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
       pkgs.xdg-desktop-portal-gtk
     ];
-    config = {
-      common.default = [ "hyprland" "gtk" ];
-      hyprland.default = [ "hyprland" "gtk" ];
-    };
+    config.common.default = [ "hyprland" "gtk" ];
   };
 
-  ########################################
-  # Sound (PipeWire)
-  ########################################
+  # Audio
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
-  
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -114,206 +70,105 @@
     jack.enable = true;
   };
 
-  ########################################
   # Bluetooth
-  ########################################
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
   };
   services.blueman.enable = true;
 
-  ########################################
   # Graphics
-  ########################################
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
   };
 
-  ########################################
-  # Users
-  ########################################
+  # User
   users.users.giyu = {
     isNormalUser = true;
     description = "Rohit";
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-      "video"
-      "audio"
-      "docker"
-    ];
+    extraGroups = [ "networkmanager" "wheel" "video" "audio" "docker" ];
     shell = pkgs.zsh;
   };
 
-  ########################################
-  # Shell Configuration
-  ########################################
+  # Shell
   programs.zsh = {
     enable = true;
     enableCompletion = true;
     syntaxHighlighting.enable = true;
     autosuggestions.enable = true;
   };
-  
   programs.starship.enable = true;
 
-  ########################################
   # System Packages
-  ########################################
   environment.systemPackages = with pkgs; [
-    # Essential tools
-    git
-    vim
-    neovim
-    wget
-    curl
-    tree
-    htop
-    btop
-    fastfetch
-    neofetch
-    tmux
-    unzip
-    zip
+    # Core
+    git vim neovim wget curl tree htop btop fastfetch tmux unzip zip
     
-    # Development
-    gcc
-    nodejs_22
-    python3
-    python3Packages.pip
-    direnv
-    nix-direnv
-    bun
-    rustup
-    go
+    # Dev Tools
+    gcc nodejs_22 python3 python3Packages.pip direnv nix-direnv bun rustup go
     
-    # Terminals
-    kitty
-    ghostty
-    
-    # Editors & IDEs
-    zed-editor
-    vscode
+    # Terminals & File Managers
+    kitty ghostty kdePackages.dolphin 
+
+    # Editors
+    vscode code-cursor
     
     # Apps
-    google-chrome
-    discord
-    spotify
-    obsidian
+    google-chrome brave vesktop spotify obsidian vlc libreoffice fractal
     
-    # Hyprland essentials
-    waybar
-    dunst
-    rofi
-    hyprpaper
-    hyprlock
-    hypridle
-    hyprpicker
-    grim
-    slurp
-    swappy
-    wl-clipboard
-    cliphist
-    networkmanagerapplet
-    pavucontrol
-    brightnessctl
-    playerctl
-    polkit_gnome
-    
-    # File manager
-    xfce.thunar
-    xfce.thunar-volman
-    xfce.thunar-archive-plugin
-    xfce.tumbler  # Thumbnail support
+    # Hyprland
+    waybar dunst rofi hyprpaper hyprlock hypridle hyprpicker
+    grim slurp swappy wl-clipboard cliphist
+    networkmanagerapplet pavucontrol brightnessctl playerctl polkit_gnome
     
     # Theming
-    papirus-icon-theme
-    catppuccin-gtk
-    catppuccin-cursors.mochaPink
-    nwg-look
+    papirus-icon-theme catppuccin-gtk catppuccin-cursors.mochaPink nwg-look
     
-    # Development tools
-    prettierd
-    eslint_d
-    stylua
-    black
-    nixfmt-rfc-style
+    # Dev LSP/Formatters
+    prettierd eslint_d stylua black nixfmt-rfc-style
+    lua-language-server pyright nodePackages.typescript-language-server nodePackages.bash-language-server
     
-    # LSP
-    lua-language-server
-    pyright
-    nodePackages.typescript-language-server
-    nodePackages.bash-language-server
-    
-    # CLI tools
-    fzf
-    bat
-    fd
-    ripgrep
-    eza
+    # CLI Tools
+    fzf bat fd ripgrep eza
     
     # Docker
-    docker
-    docker-compose
+    docker docker-compose
     
-    # Media
-    vlc
-    libreoffice
-    
-    # System utilities
-    pciutils
-    usbutils
-    gnome-keyring
-    libsecret
+    # Utilities
+    pciutils usbutils gnome-keyring libsecret
   ];
 
-  ########################################
   # Fonts
-  ########################################
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
     nerd-fonts.fira-code
     nerd-fonts.hack
     nerd-fonts.symbols-only
-    
     noto-fonts
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     noto-fonts-cjk-sans
-    
     font-awesome
     material-design-icons
-    
     jetbrains-mono
     fira-code
   ];
 
-  ########################################
-  # Programs
-  ########################################
-  programs.thunar = {
-    enable = true;
-    plugins = with pkgs.xfce; [
-      thunar-archive-plugin
-      thunar-volman
-    ];
-  };
   
-  programs.dconf.enable = true;
 
-  ########################################
   # Services
-  ########################################
-  services.openssh.enable = true;
-  services.dbus.enable = true;
-  services.gvfs.enable = true;
-  services.tumbler.enable = true;
-  
+  services = {
+    openssh.enable = true;
+    dbus.enable = true;
+    gvfs.enable = true;
+    tumbler.enable = true;
+    flatpak.enable = true;
+    gnome.gnome-keyring.enable = true;
+  };
+
   security.polkit.enable = true;
-  services.gnome.gnome-keyring.enable = true;
   
-  # Polkit authentication agent
+  # Polkit Agent
   systemd.user.services.polkit-gnome-authentication-agent-1 = {
     description = "polkit-gnome-authentication-agent-1";
     wantedBy = [ "graphical-session.target" ];
@@ -328,16 +183,11 @@
     };
   };
 
-  ########################################
   # Docker
-  ########################################
   virtualisation.docker.enable = true;
 
-  ########################################
-  # Power Management (Laptop)
-  ########################################
+  # Power Management
   services.power-profiles-daemon.enable = false;
-  
   services.tlp = {
     enable = true;
     settings = {
@@ -350,37 +200,23 @@
     };
   };
 
-  ########################################
   # Environment Variables
-  ########################################
   environment.sessionVariables = {
-    # Wayland
     NIXOS_OZONE_WL = "1";
     XDG_SESSION_TYPE = "wayland";
     QT_QPA_PLATFORM = "wayland;xcb";
     GDK_BACKEND = "wayland,x11";
     MOZ_ENABLE_WAYLAND = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
-    
-    # Hyprland
     WLR_NO_HARDWARE_CURSORS = "1";
     XCURSOR_SIZE = "24";
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_DESKTOP = "Hyprland";
-    
-    # Editor
     EDITOR = "nvim";
     VISUAL = "nvim";
   };
 
-  ########################################
-  # Flatpak (Optional)
-  ########################################
-  services.flatpak.enable = true;
   xdg.portal.xdgOpenUsePortal = true;
 
-  ########################################
-  # System State Version
-  ########################################
   system.stateVersion = "25.05";
 }

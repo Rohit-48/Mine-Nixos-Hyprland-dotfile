@@ -23,7 +23,7 @@ elif command -v swww &>/dev/null; then
   pkill swww-daemon
   swww-daemon &
   sleep 1
-  swww img ~/Pictures/wallpapers/main.jpg --transition-type wipe --transition-duration 2
+  swww img ~/Pictures/Wallpaper-Bank/wallpapers/Dynamic-Wallpapers/Light/Village-Light.png --transition-type wipe --transition-duration 2
 fi
 
 # Start status bar

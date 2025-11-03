@@ -46,7 +46,10 @@
 
 # Font Configuration
 font-family = "JetBrainsMono Nerd Font"
-font-size = 12
+font-size = 16
+
+#Opacity
+background-opacity = 0.55
 
 # Window Settings
 window-padding-x = 10
