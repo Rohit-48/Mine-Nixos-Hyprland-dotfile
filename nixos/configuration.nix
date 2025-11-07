@@ -1,7 +1,9 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
-  imports = [ ./hardware-configuration.nix ];
+  imports = [ 
+    ./hardware-configuration.nix
+  ];
 
   # Nix Settings
   nixpkgs.config.allowUnfree = true;
@@ -12,18 +14,41 @@
     auto-optimise-store = true;
   };
 
-  # Grabage Collector
+  # Garbage Collector
   nix.gc = {
     automatic = true;
     dates = "weekly";
     options = "--delete-older-than 5d";
   };
 
-  # Boot
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.loader = {
-    systemd-boot.enable = true;
-    efi.canTouchEfiVariables = true;
+  # Boot Configuration - FIXED: Removed duplicate boot.loader
+  boot = {
+    kernelPackages = pkgs.linuxPackages_latest;
+    
+    # Bootloader (disabled for Secure Boot)
+    loader = {
+      systemd-boot.enable = lib.mkForce false;  # Disabled for lanzaboote
+      efi = {
+        canTouchEfiVariables = true;
+        efiSysMountPoint = "/boot";
+      };
+    };
+
+    # Lanzaboote Secure Boot configuration
+    lanzaboote = {
+      enable = true;
+      pkiBundle = "/etc/secureboot";
+    };
+
+    # Enable TPM2 support
+    initrd.systemd.enable = true;
+  };
+
+  # TPM2 configuration
+  security.tpm2 = {
+    enable = true;
+    pkcs11.enable = true;
+    tctiEnvironment.enable = true;
   };
 
   # Network & Time
@@ -34,7 +59,7 @@
   time.timeZone = "Asia/Kolkata";
   i18n.defaultLocale = "en_IN";
 
-  # Hyprland
+  # Hyprland 
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
@@ -57,11 +82,10 @@
       pkgs.xdg-desktop-portal-gtk
     ];
     config.common.default = [ "hyprland" "gtk" ];
+    xdgOpenUsePortal = true;
   };
 
   # Audio
-  hardware.pulseaudio.enable = false;
-  security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -69,6 +93,7 @@
     pulse.enable = true;
     jack.enable = true;
   };
+  security.rtkit.enable = true;
 
   # Bluetooth
   hardware.bluetooth = {
@@ -77,17 +102,11 @@
   };
   services.blueman.enable = true;
 
-  # Graphics
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-  };
-
   # User
   users.users.giyu = {
     isNormalUser = true;
     description = "Rohit";
-    extraGroups = [ "networkmanager" "wheel" "video" "audio" "docker" ];
+    extraGroups = [ "networkmanager" "wheel" "video" "audio" "docker" "tss" ];
     shell = pkgs.zsh;
   };
 
@@ -103,7 +122,7 @@
   # System Packages
   environment.systemPackages = with pkgs; [
     # Core
-    git vim neovim wget curl tree htop btop fastfetch tmux unzip zip
+    git vim neovim wget curl tree htop btop fastfetch tmux unzip zip nitch tig glow 
     
     # Dev Tools
     gcc nodejs_22 python3 python3Packages.pip direnv nix-direnv bun rustup go
@@ -115,9 +134,9 @@
     vscode code-cursor
     
     # Apps
-    google-chrome brave vesktop spotify obsidian vlc libreoffice fractal
+    google-chrome brave vesktop spotify obsidian vlc libreoffice typora
     
-    # Hyprland
+    # Hyprland utilities
     waybar dunst rofi hyprpaper hyprlock hypridle hyprpicker
     grim slurp swappy wl-clipboard cliphist
     networkmanagerapplet pavucontrol brightnessctl playerctl polkit_gnome
@@ -137,6 +156,10 @@
     
     # Utilities
     pciutils usbutils gnome-keyring libsecret
+
+    # Secure Boot Tools
+    sbctl
+    efibootmgr
   ];
 
   # Fonts
@@ -153,8 +176,6 @@
     jetbrains-mono
     fira-code
   ];
-
-  
 
   # Services
   services = {
@@ -197,26 +218,42 @@
       CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
       START_CHARGE_THRESH_BAT0 = 40;
       STOP_CHARGE_THRESH_BAT0 = 80;
+      RUNTIME_PM_ON_AC = "auto";
+      RUNTIME_PM_ON_BAT = "auto";
     };
   };
 
   # Environment Variables
   environment.sessionVariables = {
+    # Wayland
     NIXOS_OZONE_WL = "1";
     XDG_SESSION_TYPE = "wayland";
     QT_QPA_PLATFORM = "wayland;xcb";
     GDK_BACKEND = "wayland,x11";
     MOZ_ENABLE_WAYLAND = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
+    
+    # NVIDIA + Hyprland
     WLR_NO_HARDWARE_CURSORS = "1";
+    
+    # Desktop
     XCURSOR_SIZE = "24";
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_DESKTOP = "Hyprland";
+    
+    # Editor
     EDITOR = "nvim";
     VISUAL = "nvim";
+    
+    # CUDA
+    CUDA_PATH = "${pkgs.cudaPackages.cudatoolkit}";
   };
-
-  xdg.portal.xdgOpenUsePortal = true;
+  
+  # Set LD_LIBRARY_PATH as a list to match Pipewire's format
+  environment.sessionVariables.LD_LIBRARY_PATH = lib.mkAfter [
+    "${pkgs.cudaPackages.cudatoolkit}/lib"
+    "${pkgs.cudaPackages.cudnn}/lib"
+  ];
 
   system.stateVersion = "25.05";
 }
