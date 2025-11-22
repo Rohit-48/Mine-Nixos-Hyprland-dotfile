@@ -31,7 +31,7 @@ window#waybar.hidden {
 }
 
 #custom-nixos {
-  background-color: #404040;
+  background-color: #FFFFFF;
   /*#5376C3*/
   color: #a5b6ff;
   font-size: 20px;
@@ -54,33 +54,33 @@ window#waybar.hidden {
 }
 
 #clock {
-  background: #c9c9c9;
+  background: #BBCDE5;
   color: #000000;
 }
 
 #cpu {
-  background: #404040;
+  background: #1C5D99;
   color: #ffffff;
 }
 
 #memory {
-  background: #c9c9c9;
+  background: #BBCDE5;
   color: #000000;
 }
 
 #disk {
-  background: #404040;
+  background: #1C5D99;
   color: #ffffff;
 }
 
 #temperature {
-  background: #c9c9c9;
+  background: #BBCDE5;
   color: #000000;
 }
 
 #workspaces button {
   color: #ffffff;
-  background: #404040;
+  background: #2F3061;
   border-radius: 10px;
   margin: 6px 5px;
   padding: 0px 6px;
@@ -120,17 +120,17 @@ window#waybar.hidden {
 }
 
 #pulseaudio {
-  background: #c9c9c9;
+  background: #BBCDE5;
   color: #000000;
 }
 
 #network {
-  background: #404040;
+  background: #1C5D99;
   color: #FFFFFF;
 }
 
 #battery {
-  background: #404040;
+  background: #1C5D99;
   color: #FFFFFF;
   padding-right: 15px;
   border-top-right-radius: 10px;
