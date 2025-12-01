@@ -21,13 +21,13 @@
     options = "--delete-older-than 5d";
   };
 
-  # Boot Configuration - FIXED: Removed duplicate boot.loader
+  # Boot Configuration
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
     
-    # Bootloader (disabled for Secure Boot)
+    # Bootloader (disabled for Secure Boot, lanzaboote handles it)
     loader = {
-      systemd-boot.enable = lib.mkForce false;  # Disabled for lanzaboote
+      systemd-boot.enable = lib.mkForce false;
       efi = {
         canTouchEfiVariables = true;
         efiSysMountPoint = "/boot";
@@ -38,6 +38,7 @@
     lanzaboote = {
       enable = true;
       pkiBundle = "/etc/secureboot";
+      # NOTE: boot.lanzaboote.package is set in flake.nix, not here.
     };
 
     # Enable TPM2 support
@@ -56,6 +57,8 @@
     hostName = "nixos";
     networkmanager.enable = true;
   };
+
+  # Time & Locale
   time.timeZone = "Asia/Kolkata";
   i18n.defaultLocale = "en_IN";
 
@@ -106,17 +109,37 @@
   users.users.giyu = {
     isNormalUser = true;
     description = "Rohit";
-    extraGroups = [ "networkmanager" "wheel" "video" "audio" "docker" "tss" ];
+    extraGroups = [ "networkmanager" "wheel" "video" "audio" "docker" "tss" "wireshark" ];
     shell = pkgs.zsh;
   };
 
-  # Shell
+  # Wireshark
+  programs.wireshark = {
+    enable = true;
+    package = pkgs.wireshark.override { withQt = true; };
+  };
+
+  # dumpcap wrapper
+  security.wrappers.dumpcap = lib.mkForce {
+    owner = "root";
+    group = "wireshark";
+    capabilities = "cap_net_raw+eip cap_net_admin+eip";
+    source = "${pkgs.wireshark}/bin/dumpcap";
+  };
+
+  # Enhanced Zsh Configuration
   programs.zsh = {
     enable = true;
     enableCompletion = true;
     syntaxHighlighting.enable = true;
-    autosuggestions.enable = true;
+    autosuggestions = {
+      enable = true;
+      strategy = [ "history" "completion" ];
+    };
+    histSize = 10000;
+    histFile = "$HOME/.zsh_history";
   };
+  
   programs.starship.enable = true;
 
   # System Packages
@@ -125,16 +148,23 @@
     git vim neovim wget curl tree htop btop fastfetch tmux unzip zip nitch tig glow 
     
     # Dev Tools
-    gcc nodejs_22 python3 python3Packages.pip direnv nix-direnv bun rustup go
-    
+    gcc nodejs_22 python3 python3Packages.pip direnv nix-direnv bun go ffmpeg-full uv 
+    evince kdePackages.okular 
+
+    # Rust 
+    rustc
+    cargo
+    rustfmt
+    clippy
+
     # Terminals & File Managers
-    kitty ghostty kdePackages.dolphin 
+    kitty ghostty kdePackages.dolphin wireshark  
 
     # Editors
-    vscode code-cursor
+    vscode code-cursor helix 
     
     # Apps
-    google-chrome brave vesktop spotify obsidian vlc libreoffice typora
+    google-chrome brave vesktop spotify obsidian vlc chromium
     
     # Hyprland utilities
     waybar dunst rofi hyprpaper hyprlock hypridle hyprpicker
@@ -155,11 +185,16 @@
     docker docker-compose
     
     # Utilities
-    pciutils usbutils gnome-keyring libsecret
+    pciutils usbutils gnome-keyring libsecret postman
 
     # Secure Boot Tools
     sbctl
     efibootmgr
+
+    # Java
+    openjdk21 
+    maven
+    gradle
   ];
 
   # Fonts
@@ -247,13 +282,14 @@
     
     # CUDA
     CUDA_PATH = "${pkgs.cudaPackages.cudatoolkit}";
+
+    # LD_LIBRARY_PATH – override Pipewire's definition, keep list type
+    LD_LIBRARY_PATH = lib.mkForce [
+      "${pkgs.cudaPackages.cudatoolkit}/lib"
+      "${pkgs.cudaPackages.cudnn}/lib"
+    ];
   };
-  
-  # Set LD_LIBRARY_PATH as a list to match Pipewire's format
-  environment.sessionVariables.LD_LIBRARY_PATH = lib.mkAfter [
-    "${pkgs.cudaPackages.cudatoolkit}/lib"
-    "${pkgs.cudaPackages.cudnn}/lib"
-  ];
 
   system.stateVersion = "25.05";
 }
+
