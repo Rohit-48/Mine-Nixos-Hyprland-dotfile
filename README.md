@@ -51,8 +51,8 @@ Custom NixOS configuration with Hyprland window manager, optimized for developme
 
 <div align="center">
   <img src="images/btop.png" alt="btop" width="300"/>
-  <img src="images/fastfetch" alt="fastfetch" width="300"/>
-  <img src="images/screen-shot" alt="screen-shot" width="300"/>
+  <img src="images/fastfetch.png" alt="fastfetch" width="300"/>
+  <img src="images/screen-shot.png" alt="screen-shot" width="300"/>
 </div>
 
 ## System Details
