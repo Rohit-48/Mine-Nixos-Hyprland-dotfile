@@ -4,7 +4,7 @@
   <img src="Nixos-logo.png" alt="NixOS Logo" width="200"/>
 </div>
 
-## NixOS 25.11 (Xantusia)
+## NixOS 26.05 (Yarara)
 
 ## Overview
 
