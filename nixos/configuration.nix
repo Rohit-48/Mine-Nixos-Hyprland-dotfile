@@ -14,6 +14,9 @@
     auto-optimise-store = true;
   };
 
+  systemd.services.nix-daemon.serviceConfig.LimitNOFILE =
+    lib.mkForce 1048576;
+
   # Garbage Collector
   nix.gc = {
     automatic = true;
@@ -158,13 +161,13 @@
     clippy
 
     # Terminals & File Managers
-    kitty ghostty kdePackages.dolphin wireshark  
+    kitty ghostty kdePackages.dolphin wireshark  vulkan-tools 
 
     # Editors
-    vscode code-cursor helix 
+    vscode code-cursor 
     
     # Apps
-    google-chrome brave vesktop spotify obsidian vlc chromium
+    google-chrome brave vesktop spotify obsidian vlc 
     
     # Hyprland utilities
     waybar dunst rofi hyprpaper hyprlock hypridle hyprpicker
@@ -182,7 +185,7 @@
     fzf bat fd ripgrep eza
     
     # Docker
-    docker docker-compose
+    docker docker-compose distrobox
     
     # Utilities
     pciutils usbutils gnome-keyring libsecret postman
@@ -195,6 +198,7 @@
     openjdk21 
     maven
     gradle
+    mysql84
   ];
 
   # Fonts
@@ -242,6 +246,18 @@
   # Docker
   virtualisation.docker.enable = true;
 
+  # Distrobox / Podman
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = false; # must be false when Docker is enabled
+  };
+
+
+   services.mysql = {
+      enable = true;
+      package = pkgs.mysql84;
+    };
+
   # Power Management
   services.power-profiles-daemon.enable = false;
   services.tlp = {
@@ -283,11 +299,13 @@
     # CUDA
     CUDA_PATH = "${pkgs.cudaPackages.cudatoolkit}";
 
-    # LD_LIBRARY_PATH – override Pipewire's definition, keep list type
-    LD_LIBRARY_PATH = lib.mkForce [
-      "${pkgs.cudaPackages.cudatoolkit}/lib"
-      "${pkgs.cudaPackages.cudnn}/lib"
-    ];
+    # LD_LIBRARY_PATH – override PipeWire's definition (string, not list)
+    LD_LIBRARY_PATH = lib.mkForce (
+      lib.makeLibraryPath [
+        pkgs.cudaPackages.cudatoolkit
+        pkgs.cudaPackages.cudnn
+      ]
+    );
   };
 
   system.stateVersion = "25.05";
