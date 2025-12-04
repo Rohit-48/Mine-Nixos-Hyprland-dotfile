@@ -47,6 +47,14 @@ Custom NixOS configuration with Hyprland window manager, optimized for developme
 - Fonts: JetBrains Mono Nerd Font, Fira Code, Hack
 - GTK: Catppuccin GTK theme
 
+## Images
+
+<div align="center">
+  <img src="images/btop.png" alt="btop" width="300"/>
+  <img src="images/fastfetch" alt="fastfetch" width="300"/>
+  <img src="images/screen-shot" alt="screen-shot" width="300"/>
+</div>
+
 ## System Details
 
 **Locale & Timezone**
